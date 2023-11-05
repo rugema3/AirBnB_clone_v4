@@ -1,0 +1,78 @@
+$(document).ready(function () {
+  $('input[type=checkbox]').click(function () {
+    const myListName = [];
+    const myId = [];
+    $('input[type=checkbox]:checked').each(function () {
+      myListName.push($(this).attr('data-name'));
+      myId.push($(this).attr('data-id'));
+    });
+    if (myListName.length === 0) {
+      $('.amenities h4').html('&nbsp;');
+    } else {
+      $('.amenities h4').text(myListName.join(', '));
+    }
+    console.log(myId);
+  });
+
+  // Make an API request using $.ajax
+  $.ajax({
+    url: 'http://0.0.0.0:5001/api/v1/status/',
+    type: 'GET',
+    dataType: 'json',
+    success: function (json) {
+      if (json.status === 'OK') {
+        // If the status is "OK," add the class "available" to the div#api_status
+        $('#api_status').addClass('available');
+      } else {
+        // Otherwise, remove the class "available" from the div#api_status
+        $('#api_status').removeClass('available');
+      }
+    },
+    error: function (xhr, status) {
+      console.log('error ' + status);
+    }
+  });
+
+  // Make an API request to get places using $.ajax
+  $.ajax({
+    url: 'http://0.0.0.0:5001/api/v1/places_search/',
+    type: 'POST',
+    contentType: 'application/json',
+    data: JSON.stringify({}),
+    dataType: 'json',
+    success: function (places) {
+      $('.places').empty(); // Clear existing places
+
+      for (let i = 0; i < places.length; i++) {
+        const place = places[i];
+        const guestsText = place.max_guest === 1 ? 'Guest' : 'Guests';
+        const roomsText = place.number_rooms === 1 ? 'Bedroom' : 'Bedrooms';
+        const bathroomsText = place.number_bathrooms === 1 ? 'Bathroom' : 'Bathrooms';
+
+        const placeArticle = `
+          <article>
+            <div class="title_box">
+              <h2>${place.name}</h2>
+              <div class="price_by_night">$${place.price_by_night}</div>
+            </div>
+            <div class="information">
+              <div class="max_guest">${place.max_guest} ${guestsText}</div>
+              <div class="number_rooms">${place.number_rooms} ${roomsText}</div>
+              <div class="number_bathrooms">${place.number_bathrooms} ${bathroomsText}</div>
+            </div>
+            <div class="user">
+            </div>
+            <div class="description">
+              ${place.description}
+            </div>
+          </article>
+        `;
+
+        $('.places').append(placeArticle);
+      }
+    },
+    error: function (xhr, status) {
+      console.log('error ' + status);
+    }
+  });
+});
